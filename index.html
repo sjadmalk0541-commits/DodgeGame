@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>فرار از موانع</title>
+<style>
+body{margin:0;background:#101827;color:white;text-align:center;font-family:sans-serif}
+h2{margin:12px}
+canvas{width:94vw;max-width:360px;height:auto;background:#18243a;border:2px solid #39e6c2;border-radius:12px;touch-action:none}
+button{padding:12px 28px;margin:12px;background:#39e6c2;border:0;border-radius:10px;font-size:18px}
+</style>
+</head>
+<body>
+<h2>🎮 فرار از موانع</h2>
+<p id="score">امتیاز: ۰</p>
+<canvas id="game" width="360" height="540"></canvas><br>
+<button onclick="start()">شروع بازی</button>
+<p>انگشتت را روی صفحه بکش تا توپ حرکت کند!</p>
+<script>
+const c=document.getElementById('game'),x=c.getContext('2d');
+let p={x:180,y:480,r:13},obs=[],score=0,run=false,last=0;
+function start(){
+p.x=180;obs=[];score=0;run=true;last=0;
+requestAnimationFrame(loop);
+}
+c.onpointermove=e=>{
+if(!run)return;
+let r=c.getBoundingClientRect();
+p.x=Math.max(13,Math.min(347,(e.clientX-r.left)*360/r.width));
+};
+function loop(t){
+if(!run)return;
+let dt=Math.min((t-last||16)/16,2);last=t;
+x.clearRect(0,0,360,540);
+if(Math.random()<.035*dt)obs.push({x:Math.random()*300,y:-25,w:35+Math.random()*35,h:20,s:2+Math.random()*2+score/300});
+for(let o of obs){
+o.y+=o.s*dt;
+x.fillStyle='#ff5263';x.fillRect(o.x,o.y,o.w,o.h);
+if(p.x+p.r>o.x&&p.x-p.r<o.x+o.w&&p.y+p.r>o.y&&p.y-p.r<o.y+o.h){
+run=false;x.fillStyle='white';x.font='bold 28px sans-serif';x.textAlign='center';x.fillText('بازی تمام شد!',180,250);
+x.font='20px sans-serif';x.fillText('امتیاز: '+Math.floor(score),180,290);return;
+}}
+obs=obs.filter(o=>o.y<560);score+=dt*.1;
+x.beginPath();x.arc(p.x,p.y,p.r,0,Math.PI*2);x.fillStyle='#39e6c2';x.fill();
+document.getElementById('score').textContent='امتیاز: '+Math.floor(score);
+requestAnimationFrame(loop);
+}
+x.beginPath();x.arc(p.x,p.y,p.r,0,Math.PI*2);x.fillStyle='#39e6c2';x.fill();
+</script>
+</body>
+</html>

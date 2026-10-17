@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>فرار از موانع</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;overflow:hidden;background:linear-gradient(#080b25,#142653,#080b25);color:white;font-family:sans-serif;text-align:center}
+h2{color:#67f7ff;text-shadow:0 0 15px #00d9ff}
+#info{display:flex;justify-content:space-around;font-size:18px}
+#game{position:relative;margin:10px auto;width:92vw;max-width:420px;height:60vh;min-height:350px;max-height:600px;overflow:hidden;border:2px solid #36eaff;border-radius:18px;box-shadow:0 0 20px #00c8ff;background:repeating-linear-gradient(90deg,transparent 0 48%,#ffffff12 49% 50%,transparent 51% 100%),linear-gradient(#111b40,#202e58)}
+#player{position:absolute;bottom:20px;left:calc(50% - 20px);width:40px;height:48px;border-radius:12px;background:linear-gradient(white,#00eaff);box-shadow:0 0 18px #00eaff}
+.obstacle{position:absolute;top:-45px;width:38px;height:38px;border-radius:9px;background:linear-gradient(135deg,#ffec60,#ff3d76);box-shadow:0 0 16px #ff3d76}
+button{border:0;border-radius:12px;padding:12px 22px;margin:5px;font-size:18px;font-weight:bold;background:#60f5ff;color:#071126}
+.controls{display:flex;justify-content:center;gap:25px}
+.controls button{width:95px;font-size:24px}
+#message{color:#ffe86a;min-height:25px}
+</style>
+</head>
+<body>
+<h2>⚡ فرار از موانع ⚡</h2>
+<div id="info"><span>امتیاز: <b id="score">0</b></span><span>رکورد: <b id="best">0</b></span></div>
+<div id="game"><div id="player"></div></div>
+<div id="message">برای شروع بازی بزن!</div>
+<button id="start">شروع بازی</button>
+<div class="controls"><button id="left">⬅️</button><button id="right">➡️</button></div>
+<script>
+const game=document.getElementById('game'),player=document.getElementById('player');
+const scoreEl=document.getElementById('score'),bestEl=document.getElementById('best'),message=document.getElementById('message');
+let x=0,score=0,best=Number(localStorage.getItem('dodgeBest')||0),running=false,obstacles=[],last=0,spawn=0,raf=0;
+bestEl.textContent=best;
+function move(dx){if(!running)return;x=Math.max(0,Math.min(game.clientWidth-player.offsetWidth,x+dx));player.style.left=x+'px'}
+document.getElementById('left').onpointerdown=()=>move(-35);
+document.getElementById('right').onpointerdown=()=>move(35);
+document.addEventListener('keydown',e=>{if(e.key==='ArrowLeft')move(-25);if(e.key==='ArrowRight')move(25)});
+function end(){running=false;cancelAnimationFrame(raf);message.textContent='💥 بازی تمام شد! امتیاز: '+score;if(score>best){best=score;localStorage.setItem('dodgeBest',best);bestEl.textContent=best}document.getElementById('start').textContent='دوباره بازی کن'}
+function loop(t){
+ if(!running)return;
+ const dt=Math.min((t-last)/16.67||1,2);last=t;spawn+=dt;
+ if(spawn>35){spawn=0;const o=document.createElement('div');o.className='obstacle';o.style.left=Math.random()*(game.clientWidth-40)+'px';game.appendChild(o);obstacles.push({el:o,y:-45})}
+ for(let i=obstacles.length-1;i>=0;i--){
+  const o=obstacles[i];o.y+=4*dt;o.el.style.top=o.y+'px';
+  const px=x,py=game.clientHeight-68,ox=parseFloat(o.el.style.left);
+  if(ox<px+40&&ox+38>px&&o.y<py+48&&o.y+38>py){end();return}
+  if(o.y>game.clientHeight){o.el.remove();obstacles.splice(i,1);score++;scoreEl.textContent=score}
+ }
+ raf=requestAnimationFrame(loop)
+}
+function start(){cancelAnimationFrame(raf);obstacles.forEach(o=>o.el.remove());obstacles=[];score=0;scoreEl.textContent='0';spawn=0;x=(game.clientWidth-player.offsetWidth)/2;player.style.left=x+'px';message.textContent='موفق باشی! 🚀';running=true;last=performance.now();raf=requestAnimationFrame(loop)}
+document.getElementById('start').onclick=start;
+</script>
+</body>
+</html>
